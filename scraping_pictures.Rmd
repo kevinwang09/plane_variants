@@ -1,0 +1,141 @@
+---
+title: "scraping pictures"
+author: "Kevin Wang"
+date: "01/02/2021"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(rvest)
+library(xml2)
+```
+
+
+# Single page 
+```{r}
+url = "https://www.jetphotos.com/showphotos.php?aircraft=Airbus+A380%3B&airline=all&category=all&country-location=all&genre=all&keywords-contain=3&keywords-type=all&keywords=&photo-year=all&photographer-group=all&search-type=Advanced&sort-order=0&page=1"
+
+single = xml2::read_html(url)
+
+links = single %>%
+  html_nodes(".result__photoLink") %>% ## Locate the photo link tag
+  html_nodes("img") %>% ## Then the img tag
+  html_attr("src") %>% ## The attribute of img is src
+  stringr::str_remove("//")
+
+links_name = links %>%
+  str_replace_all("/", "-") %>%
+  paste0("img/a380/", .)
+
+# download.file(url = links[1], destfile = links_name[1])
+```
+
+## Extra info
+```{r}
+single %>%
+  html_nodes(".result__infoList") %>%
+  html_nodes(".result__infoListText") %>%
+  html_text() %>% 
+  matrix(ncol = 12, byrow = TRUE) %>% 
+  as.data.frame() %>% 
+  as_tibble()
+```
+
+
+# Downloading first 10 pages of A380
+```{r}
+get_links = function(single){
+  single %>% 
+  html_nodes(".result__photoLink") %>% ## Locate the photo link tag
+  html_nodes("img") %>% ## Then the img tag
+  html_attr("src") %>% ## The attribute of img is src
+  stringr::str_remove("//")
+}
+
+get_links_name = function(links, prefix){
+  links %>% 
+  str_replace_all("/", "-") %>% 
+  paste0(prefix, .)
+}
+
+get_info = function(single){
+  single %>% 
+    html_nodes(".result__infoList") %>%
+    html_nodes(".result__infoListText") %>%
+    html_text() %>% 
+    matrix(ncol = 12, byrow = TRUE) %>% 
+    as.data.frame() %>% 
+    as_tibble() %>% 
+    dplyr::transmute(
+      model = V2, 
+      airline = V4,
+      photo_date = V9,
+      uploaded_date = V10,
+      location = V11,
+      uploader = V12)
+}
+
+download_imgs = function(base_url, pages, dir){
+  
+  urls = paste0(base_url, pages)
+  htmls = all_links = all_links_name = all_info = vector("list", length = length(urls))
+  
+  for(i in seq_along(urls)){
+    htmls[[i]] = xml2::read_html(urls[i])
+    Sys.sleep(3)
+    message(i)
+    
+    all_links[[i]] = get_links(htmls[[i]])
+    all_links_name[[i]] = get_links_name(all_links[[i]], prefix = dir)
+    
+    all_info[[i]] = get_info(htmls[[i]]) %>% 
+      dplyr::mutate(
+        photo_link = all_links[[i]],
+        download_path = all_links_name[[i]])
+    
+    download.file(url = all_links[[i]], destfile = all_links_name[[i]], quiet = TRUE)
+  } 
+  readr::write_csv(x = bind_rows(all_info), file = paste0(dir, "info.csv"))
+}
+```
+
+# Airbus planes
+
+```{r}
+airbus_vec = c("A320", "A330", "A340", "A350", "A380")
+# airbus_base_urls = paste0(
+#   "https://www.jetphotos.com/showphotos.php?aircraft=Airbus+", 
+#   airbus_vec,
+#   "%3B&airline=all&category=all&country-location=all&genre=all&keywords-contain=3&keywords-type=all&keywords=&photo-year=all&photographer-group=all&search-type=Advanced&sort-order=0&page=")
+# airbus_base_urls
+
+for(i in airbus_vec){
+  system(paste0("mkdir ./img/", i))
+  base_url = paste0(
+  "https://www.jetphotos.com/showphotos.php?aircraft=Airbus+", i,
+  "%3B&airline=all&category=all&country-location=all&genre=all&keywords-contain=3&keywords-type=all&keywords=&photo-year=all&photographer-group=all&search-type=Advanced&sort-order=0&page=")
+  
+  download_imgs(base_url = base_url,
+              pages = 1:40,
+              dir = paste0("./img/", i, "/"))
+}
+```
+
+# Boeing planes
+
+```{r}
+boeing_vec = c("737", "777", "787", "747")
+
+for(i in boeing_vec){
+  system(paste0("mkdir ./img/B", i))
+  base_url = paste0(
+  "https://www.jetphotos.com/showphotos.php?aircraft=Boeing+", i,
+  "%3B&airline=all&country-location=all&photographer-group=all&category=all&keywords-type=all&keywords-contain=3&keywords=&photo-year=all&genre=all&search-type=Advanced&sort-order=0&page=")
+  
+  download_imgs(base_url = base_url,
+              pages = 1:40,
+              dir = paste0("./img/B", i, "/"))
+}
+```
+

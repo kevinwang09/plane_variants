@@ -1,0 +1,48 @@
+---
+title: "Checking bias in the images"
+author: "Kevin Wang"
+date: "14/02/2021"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+theme_set(theme_bw())
+```
+
+
+# Load all the `info.csv`
+```{r}
+list_info_files = list.files(path = "./img/", pattern = "info.csv", 
+                             full.names = TRUE, recursive = TRUE)
+
+list_info_files = list_info_files[!str_detect(list_info_files, "additional")] ## We don't load the additional non-standard cases
+
+print(list_info_files)
+
+all_info = purrr::map_dfr(list_info_files, readr::read_csv)
+```
+
+# Tabulating
+```{r}
+model_airline_summ = all_info %>% 
+  dplyr::mutate(
+    model_large = case_when(
+      str_detect(model, "A380") ~ "A380",
+      str_detect(model, "787") ~ "787")
+  ) %>% 
+  group_by(model_large, airline) %>% 
+  tally() %>% 
+  arrange(desc(n)) %>% 
+  ungroup()
+
+
+model_airline_summ %>% 
+  ggplot(aes(x = model_large, y = fct_reorder(airline, n),
+             fill = n, label = n)) +
+  geom_tile() +
+  geom_text() +
+  scale_fill_distiller(palette = "Spectral") +
+  theme_classic()
+```
+
