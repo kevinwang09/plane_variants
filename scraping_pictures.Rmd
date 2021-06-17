@@ -148,7 +148,17 @@ list_info_files = list_info_files[!str_detect(list_info_files, "additional")] ##
 
 print(list_info_files)
 
-all_info = purrr::map_dfr(list_info_files, readr::read_csv)
+all_info = purrr::map_dfr(list_info_files, readr::read_csv) %>% 
+  dplyr::rename(long_model = model) %>% 
+  dplyr::mutate(
+    model = long_model %>% 
+      stringr::str_remove_all("irbus |oeing ") %>% 
+      stringr::str_replace_all("AA", "A") %>% 
+      stringr::str_extract("^(A|B)\\d+"),
+    variant = long_model %>% 
+      stringr::str_remove_all("irbus |oeing ") %>% 
+      stringr::str_replace_all("AA", "A") %>% 
+      stringr::str_extract("(?<=-)[:alnum:]*"))
 
 write_csv(x = all_info, file = "./img/all_info.csv")
 ```

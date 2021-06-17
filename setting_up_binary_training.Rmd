@@ -1,0 +1,38 @@
+---
+title: "Setting up binary training"
+author: "Kevin Wang"
+date: "17/06/2021"
+output: html_document
+---
+
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+all_info = read_csv(file = "./img/all_info.csv")
+```
+
+# A380 vs B747
+
+```{r}
+set.seed(123)
+
+prop_split = 0.8
+prop_train = prop_split*prop_split
+prop_test = 1-prop_split
+prop_validation = prop_split*prop_test
+
+a380_v_b747 = all_info %>% 
+  dplyr::filter(model %in% c("A320", "B747")) %>% 
+  dplyr::mutate(
+    purpose = sample(x = c("train", "test", "validatoin"),
+                     size = nrow(.),
+                     replace = TRUE,
+                     prob = c(prop_train, prop_test, prop_validation)))
+
+a380_v_b747
+write_csv(x = a380_v_b747, file = "./img/a380_v_b747.csv")
+```
+
