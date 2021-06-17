@@ -139,3 +139,16 @@ for(i in boeing_vec){
 }
 ```
 
+# Load all the `info.csv`
+```{r}
+list_info_files = list.files(path = "./img/", pattern = "info.csv", 
+                             full.names = TRUE, recursive = TRUE)
+
+list_info_files = list_info_files[!str_detect(list_info_files, "additional")] ## We don't load the additional non-standard cases
+
+print(list_info_files)
+
+all_info = purrr::map_dfr(list_info_files, readr::read_csv)
+
+write_csv(x = all_info, file = "./img/all_info.csv")
+```

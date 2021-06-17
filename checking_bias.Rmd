@@ -23,7 +23,23 @@ print(list_info_files)
 all_info = purrr::map_dfr(list_info_files, readr::read_csv)
 ```
 
+https://cran.r-project.org/web/packages/stringr/vignettes/regular-expressions.html
+```{r}
+all_info %>% 
+  group_by(model) %>% 
+  tally() %>% 
+  arrange(desc(n)) %>% 
+  ungroup() %>% 
+  dplyr::mutate(
+    model_large = model %>% 
+      stringr::str_remove_all("irbus |oeing ") %>% 
+      stringr::str_replace_all("AA", "A") %>% 
+      stringr::str_extract("^(A|B)\\d+")) %>% 
+  View()
+```
+
 # Tabulating
+
 ```{r}
 model_airline_summ = all_info %>% 
   dplyr::mutate(
