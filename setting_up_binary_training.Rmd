@@ -25,7 +25,7 @@ prop_test = 1-prop_split
 prop_validation = prop_split*prop_test
 
 a380_v_b747 = all_info %>% 
-  dplyr::filter(model %in% c("A320", "B747")) %>% 
+  dplyr::filter(model %in% c("A380", "B747")) %>% 
   dplyr::mutate(
     purpose = sample(x = c("train", "test", "validation"),
                      size = nrow(.),
