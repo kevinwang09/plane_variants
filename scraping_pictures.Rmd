@@ -3,6 +3,8 @@ title: "scraping pictures"
 author: "Kevin Wang"
 date: "01/02/2021"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r}
@@ -22,7 +24,8 @@ links = single %>%
   html_nodes(".result__photoLink") %>% ## Locate the photo link tag
   html_nodes("img") %>% ## Then the img tag
   html_attr("src") %>% ## The attribute of img is src
-  stringr::str_remove("//")
+  stringr::str_remove("//") %>% 
+  stringr::str_replace("/400/", "/full/")
 
 links_name = links %>%
   str_replace_all("/", "-") %>%
@@ -50,7 +53,8 @@ get_links = function(single){
   html_nodes(".result__photoLink") %>% ## Locate the photo link tag
   html_nodes("img") %>% ## Then the img tag
   html_attr("src") %>% ## The attribute of img is src
-  stringr::str_remove("//")
+  stringr::str_remove("//") %>% 
+  stringr::str_replace("/400/", "/full/")
 }
 
 get_links_name = function(links, prefix){
