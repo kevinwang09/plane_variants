@@ -39,3 +39,4 @@ vignettes/*.pdf
 .Renviron
 img/
 .ipynb_checkpoints/
+__pycache__

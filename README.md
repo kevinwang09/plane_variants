@@ -16,6 +16,10 @@ Some major milestones to hit:
 3. Produce some diagnostic statistics, including SHAP values on the images. 
 4. Evaluate the classification results to ensure there isn't any inherent bias. 
 
+Updates
+
++ 01 May 2022: A number of the downloaded images are not of the exterior of the plane itself, but vary between the interior or other parts of the plane. The `mobilenet_v2` model was used to make predictions on these images with the attempt to filter these out in later analysis.
+
 # Phase 2: Extending model to handle multiple classes of plane models
 
 This is the multi-class extension of stage 1. The reason that this is done is stages is the size of the data is much larger and will require longer training time. 
