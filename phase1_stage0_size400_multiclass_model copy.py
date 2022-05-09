@@ -1,4 +1,5 @@
 import json
+from re import I
 import pandas as pd
 import numpy as np
 import tensorflow as tf
@@ -18,8 +19,8 @@ def prep_fn(img):
 datagen = tf.keras.preprocessing.image.ImageDataGenerator(preprocessing_function=prep_fn)
 
 # All photos in all_info.csv
-all_info = pd.read_csv("./img/size_400/all_info_"+date+".csv")
-all_info.download_path = all_info.download_path.str.replace("./size_400", "./img/size_400")
+all_info = pd.read_csv("./img/all_info_size400_"+date+".csv")
+all_info.download_path = all_info.download_path.str.replace("./img", "./img/size_400")
 # IMG_SIZE = (None, None)
 
 all_dataset = datagen.flow_from_dataframe(
@@ -41,4 +42,4 @@ all_predictions_decoded = mn2.decode_predictions(all_predictions, top=1)
 all_predictions_class = [l[0][1] for l in all_predictions_decoded]
 Counter([l for l in all_predictions_class])
 all_info["qc_class"] = all_predictions_class
-all_info.to_csv(path_or_buf="./output/all_info_size400_stage0filtered_" + date +".csv")
+all_info.to_csv(path_or_buf="./output/all_info_size400_stage0filtered_" + date +".csv", index=False)
