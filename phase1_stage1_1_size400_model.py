@@ -142,9 +142,13 @@ print(prediction_batch.shape)
 
 preprocess_input = tf.keras.applications.mobilenet_v2.preprocess_input
 
+data_augmentation = tf.keras.Sequential([
+  tf.keras.layers.RandomFlip('horizontal'),
+  tf.keras.layers.RandomRotation(0.2)
+])
+
 inputs = tf.keras.Input(shape=(225, 400, 3))
-# x = data_augmentation(inputs)
-# x = preprocess_input(x)
+x = data_augmentation(inputs)
 x = preprocess_input(inputs)
 x = base_model(x, training=False)
 x = global_average_layer(x)
@@ -200,7 +204,7 @@ base_model.trainable = True
 print("Number of layers in the base model: ", len(base_model.layers))
 
 # Fine-tune from this layer onwards
-fine_tune_at = 75
+fine_tune_at = 100
 
 # Freeze all the layers before the `fine_tune_at` layer
 for layer in base_model.layers[:fine_tune_at]:
@@ -217,11 +221,20 @@ len(model.trainable_variables)
 fine_tune_epochs = 100
 total_epochs = initial_epochs + fine_tune_epochs
 
+callback=tf.keras.callbacks.EarlyStopping(
+    monitor='val_accuracy', 
+    patience=10, 
+    min_delta=0.01,
+    verbose=1, 
+    mode="max",
+    restore_best_weights=True)
+
 with tf.device('/GPU:0'): 
     history_fine = model.fit(train_dataset,
                          epochs=total_epochs,
                          initial_epoch=history.epoch[-1],
-                         validation_data=validation_dataset)
+                         validation_data=validation_dataset,
+                         callbacks=[callback])
 
 model.save(model_name)
 
@@ -262,7 +275,7 @@ all_dataset = datagen.flow_from_dataframe(
     directory=None,
     x_col="download_path",
     y_col="model",
-    # target_size=IMG_SIZE,
+    target_size=IMG_SIZE,
     color_mode="rgb",
     class_mode="categorical",
     batch_size=32,
